@@ -10,8 +10,8 @@
 #define OUTPUT  1
 #define NUM_PINS 14
 
-// Estado interno dos pinos
-extern int pin_modes[NUM_PINS];
+/* estado global (definido em src/arduino_core.c) */
+extern unsigned char pin_modes[NUM_PINS];
 extern int pin_states[NUM_PINS];
 
 /**

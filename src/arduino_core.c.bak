@@ -1,23 +1,31 @@
 /*
  * src/arduino_core.c
  * Implementação dos stubs "core" para ESBMC-Arduino Plus
- * Inicialização estática do estado dos pinos para garantir comportamento
- * determinístico no ESBMC (constructor não é executado pelo verificador).
+ * Autor: (adaptado para seu projeto)
  */
 
 #include "arduino_core.h"
 #include "esbmc.h"
 
+/* definição do estado global (compatível com header) */
 #ifndef NUM_PINS
 #define NUM_PINS 14
 #endif
 
-/* Inicializa todos os pinos como OUTPUT por padrão (valor = 1).
-   Usamos um designator GNU para preencher a faixa inteira em tempo de compilação. */
-unsigned char pin_modes[NUM_PINS] = { [0 ... NUM_PINS-1] = OUTPUT };
-int pin_states[NUM_PINS] = { 0 };
+/* tipos coerentes com o header: unsigned char para pin_modes */
+unsigned char pin_modes[NUM_PINS];
+int pin_states[NUM_PINS];
 
-/* Implementações das APIs core com asserts para ESBMC */
+/* inicializador simples (opcional) */
+__attribute__((constructor))
+static void arduino_core_init(void) {
+  for (int i = 0; i < NUM_PINS; ++i) {
+    pin_modes[i] = OUTPUT;   /* padrão: OUTPUT (consistente com seus stubs anteriores) */
+    pin_states[i] = 0;
+  }
+}
+
+/* implementações das APIs core com asserts para ESBMC */
 void pinMode(int pin, int mode) {
   __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "pinMode: pino inválido");
   __ESBMC_assert(mode == INPUT || mode == OUTPUT, "pinMode: modo inválido");

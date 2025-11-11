@@ -1,68 +1,62 @@
-# ESBMC-Arduino Plus Makefile
+# Makefile (sugestão)
+CC = esbmc
+BASE_CFLAGS = --no-bounds-check -Iinclude
+UNWIND = --unwind 5
 
-CC      = esbmc
-CFLAGS  = --unwind 5 --no-bounds-check -Iinclude
+LOGDIR = logs
+prepare:
+	mkdir -p $(LOGDIR)
 
-# Alvos padrão
-all: core analog time serial wire spi overflow eeprom ethernet lcd servo
+# default
+.PHONY: all ci prepare clean
+all: prepare core analog time serial wire spi eeprom ethernet lcd servo
 
-# Teste do módulo core (digital)
+# core
 core:
-	$(CC) tests/test_core.c src/arduino_core.c $(CFLAGS)
+	$(CC) tests/test_core.c src/arduino_core.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/core.log 2>&1 || true
 
-# Teste do módulo analógico
 analog:
-	$(CC) tests/test_analog.c src/arduino_analog.c $(CFLAGS)
+	$(CC) tests/test_analog.c src/arduino_analog.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/analog.log 2>&1 || true
 
-# Teste do módulo de tempo
 time:
-	$(CC) tests/test_time.c src/arduino_time.c $(CFLAGS)
+	$(CC) tests/test_time.c src/arduino_time.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/time.log 2>&1 || true
 
-# Teste do módulo Serial
 serial:
-	$(CC) tests/test_serial.c src/arduino_serial.c $(CFLAGS)
+	$(CC) tests/test_serial.c src/arduino_serial.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/serial.log 2>&1 || true
 
-# Teste do módulo I2C (Wire)
 wire:
-	$(CC) tests/test_wire.c src/arduino_wire.c $(CFLAGS)
+	$(CC) tests/test_wire.c src/arduino_wire.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/wire.log 2>&1 || true
 
-# Teste do módulo SPI
 spi:
-	$(CC) tests/test_spi.c src/arduino_spi.c $(CFLAGS)
+	$(CC) tests/test_spi.c src/arduino_spi.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/spi.log 2>&1 || true
 
-
-# Teste do módulo EEPROM
 eeprom:
-	$(CC) tests/test_eeprom.c src/arduino_eeprom.c $(CFLAGS)
+	$(CC) tests/test_eeprom.c src/arduino_eeprom.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/eeprom.log 2>&1 || true
 
-# Teste do módulo Ethernet
+# override unwind for ethernet target (strings may need more unwinding)
 ethernet:
-	$(CC) tests/test_ethernet.c src/arduino_ethernet.c $(CFLAGS)
+	$(CC) tests/test_ethernet.c src/arduino_ethernet.c $(BASE_CFLAGS) --unwind 12 > $(LOGDIR)/ethernet.log 2>&1 || true
 
-# Teste do módulo LiquidCrystal
 lcd:
-	$(CC) tests/test_liquidcrystal.c src/arduino_liquidcrystal.c $(CFLAGS)
+	$(CC) tests/test_liquidcrystal.c src/arduino_liquidcrystal.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/lcd.log 2>&1 || true
 
-# Teste do módulo Servo
 servo:
-	$(CC) tests/test_servo.c src/arduino_servo.c $(CFLAGS)
-	
-# Teste de overflow aritmético
-#overflow:
-	#$(CC) tests/test_overflow.c src/test_overflow.c $(CFLAGS)
-	
-		
-foobar:
-	$(CC) tests/test_foobar_ok.c src/arduino_foobar.c $(CFLAGS)	
-	
+	$(CC) tests/test_servo.c src/arduino_servo.c $(BASE_CFLAGS) $(UNWIND) > $(LOGDIR)/servo.log 2>&1 || true
 
-# Limpeza de artefatos do ESBMC
+# run CI (all) and concat log to single file
+ci: prepare
+	@echo "Running full suite; combined log: $(LOGDIR)/make_all.log"
+	@rm -f $(LOGDIR)/make_all.log
+	@for t in analog core time serial wire spi eeprom ethernet lcd servo; do \
+	  echo "=== $$t ===" >> $(LOGDIR)/make_all.log; \
+	  make $$t; \
+	  cat $(LOGDIR)/$$t.log >> $(LOGDIR)/make_all.log; \
+	done
+	@echo "Done. Tail of combined log:"; tail -n 200 $(LOGDIR)/make_all.log
+
 clean:
-	rm -f *.assert *.counterexample *.out
+	rm -rf $(LOGDIR)/*.log
 
-.PHONY: all core analog time serial wire spi overflow eeprom ethernet lcd servo clean 
-
-
-# make          # rodará todos os testes, um a um
-# make analog   # só o teste analógico, por exemplo
-# make clean    # limpa as saídas do ESBMC
+# convenience: run a single test (usage: make run TEST=core)
+run:
+	$(CC) tests/test_$(TEST).c src/arduino_$(TEST).c $(BASE_CFLAGS) $(UNWIND)

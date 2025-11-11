@@ -1,0 +1,16 @@
+ESBMC version 7.10.0 64-bit x86_64 linux
+Target: 64-bit little-endian x86_64-unknown-linux with esbmclibc
+Parsing tests/test_serial.c
+Parsing src/arduino_serial.c
+Converting
+Generating GOTO Program
+GOTO program creation time: 0.119s
+GOTO program processing time: 0.000s
+Starting Bounded Model Checking
+Symex completed in: 0.000s (21 assignments)
+Caching time: 0.000s (removed 0 assertions)
+Slicing time: 0.000s (removed 20 assignments)
+Generated 4 VCC(s), 0 remaining after simplification (1 assignments)
+BMC program time: 0.003s
+
+VERIFICATION SUCCESSFUL
