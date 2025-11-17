@@ -1,36 +1,23 @@
-/**
- * arduino_core.h
- * ESBMC-Arduino Plus – Operational Models for core digital functions
+/* include/arduino_core.h
+ * Declarations for the core Arduino operational model
  */
-
 #ifndef ARDUINO_CORE_H
 #define ARDUINO_CORE_H
 
-#define INPUT   0
-#define OUTPUT  1
-#define NUM_PINS 14
+#include "esbmc.h"
 
-/* estado global (definido em src/arduino_core.c) */
-extern unsigned char pin_modes[NUM_PINS];
+/* Number of pins used in the model (override with -DNUM_PINS=N if needed) */
+#ifndef NUM_PINS
+#define NUM_PINS 14
+#endif
+
+/* Global hardware state (defined in src/arduino_core.c) */
+extern unsigned char pin_modes[NUM_PINS]; /* 0 = INPUT, 1 = OUTPUT */
 extern int pin_states[NUM_PINS];
 
-/**
- * Configura o modo (INPUT/OUTPUT) de um pino.
- * Pré-condições: pin ∈ [0,NUM_PINS), mode ∈ {INPUT,OUTPUT}.
- */
+/* Core API prototypes (implemented in src/arduino_core.c) */
 void pinMode(int pin, int mode);
-
-/**
- * Escreve HIGH/LOW em um pino configurado como OUTPUT.
- * Pré-condições: mesmo intervalo de pino; pinMode(pin)==OUTPUT.
- */
 void digitalWrite(int pin, int value);
-
-/**
- * Lê o estado de um pino configurado como INPUT.
- * Pré-condições: pinMode(pin)==INPUT.
- * Retorna o último valor escrito (pin_states[pin]).
- */
 int digitalRead(int pin);
 
-#endif // ARDUINO_CORE_H
+#endif /* ARDUINO_CORE_H */

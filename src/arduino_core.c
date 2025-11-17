@@ -1,40 +1,40 @@
-/*
+/**
  * src/arduino_core.c
- * Implementação dos stubs "core" para ESBMC-Arduino Plus
- * Inicialização estática do estado dos pinos para garantir comportamento
- * determinístico no ESBMC (constructor não é executado pelo verificador).
+ * ESBMC-Arduino Plus – Implementation stubs for core digital I/O
  */
 
 #include "arduino_core.h"
-#include "esbmc.h"
+#include <string.h>
 
-#ifndef NUM_PINS
-#define NUM_PINS 14
-#endif
+/* single definition of the hardware state */
+unsigned char pin_modes[NUM_PINS];
+int pin_states[NUM_PINS];
 
-/* Inicializa todos os pinos como OUTPUT por padrão (valor = 1).
-   Usamos um designator GNU para preencher a faixa inteira em tempo de compilação. */
-unsigned char pin_modes[NUM_PINS] = { [0 ... NUM_PINS-1] = OUTPUT };
-int pin_states[NUM_PINS] = { 0 };
+/* optional initializer to set safe defaults */
+void init_pin_state(void) __attribute__((constructor));
+void init_pin_state(void) {
+    /* default: all OUTPUT and state 0 */
+    for (int i = 0; i < NUM_PINS; ++i) {
+        pin_modes[i] = OUTPUT;
+        pin_states[i] = 0;
+    }
+}
 
-/* Implementações das APIs core com asserts para ESBMC */
 void pinMode(int pin, int mode) {
-  __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "pinMode: pino inválido");
-  __ESBMC_assert(mode == INPUT || mode == OUTPUT, "pinMode: modo inválido");
-  pin_modes[pin] = (unsigned char) mode;
+    __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "pinMode: pino inválido");
+    __ESBMC_assert(mode == INPUT || mode == OUTPUT, "pinMode: modo inválido");
+    pin_modes[pin] = (unsigned char)(mode == INPUT ? 0 : 1);
 }
 
 void digitalWrite(int pin, int value) {
-  __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "digitalWrite: pino inválido");
-  __ESBMC_assert(value == HIGH || value == LOW, "digitalWrite: valor inválido");
-  __ESBMC_assert(pin_modes[pin] == OUTPUT, "digitalWrite: pino não configurado como OUTPUT");
-  pin_states[pin] = value;
+    __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "digitalWrite: pino inválido");
+    __ESBMC_assert(value == HIGH || value == LOW, "digitalWrite: valor inválido");
+    __ESBMC_assert(pin_modes[pin] == OUTPUT, "digitalWrite: pino não configurado como OUTPUT");
+    pin_states[pin] = value;
 }
 
 int digitalRead(int pin) {
-  __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "digitalRead: pino inválido");
-  __ESBMC_assert(pin_modes[pin] == INPUT, "digitalRead: pino não configurado como INPUT");
-  int v = __VERIFIER_nondet_int();
-  __ESBMC_assume((v == 0) || (v == 1));
-  return v;
+    __ESBMC_assert(pin >= 0 && pin < NUM_PINS, "digitalRead: pino inválido");
+    __ESBMC_assert(pin_modes[pin] == INPUT, "digitalRead: pino não configurado como INPUT");
+    return pin_states[pin];
 }

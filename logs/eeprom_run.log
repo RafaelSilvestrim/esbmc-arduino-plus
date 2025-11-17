@@ -4,12 +4,12 @@ Parsing tests/test_eeprom.c
 Parsing src/arduino_eeprom.c
 Converting
 Generating GOTO Program
-GOTO program creation time: 0.111s
+GOTO program creation time: 0.135s
 GOTO program processing time: 0.000s
 Starting Bounded Model Checking
-Symex completed in: 0.000s (22 assignments)
+Symex completed in: 0.000s (20 assignments)
 Caching time: 0.000s (removed 0 assertions)
-Slicing time: 0.000s (removed 20 assignments)
+Slicing time: 0.000s (removed 18 assignments)
 Generated 5 VCC(s), 1 remaining after simplification (2 assignments)
 No solver specified; defaulting to z3
 Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
